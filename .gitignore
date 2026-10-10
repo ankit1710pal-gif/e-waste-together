@@ -1,0 +1,16 @@
+node_modules/
+.npm/
+dist/
+.amplify/
+amplify_outputs.json
+.env
+.env.*
+!.env.example
+*.log
+coverage/
+playwright-report/
+test-results/
+private-pilot-records/
+.aws/
+*.pem
+*.key
