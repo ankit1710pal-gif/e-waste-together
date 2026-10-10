@@ -11,9 +11,11 @@ Status: Blocked on AWS account access
 - amplify.yml; docs/deployment.md. No Amplify app ID, region deployment, resource identifiers or public URL available.
 - Opening Amplify through AWS service search redirected to "Complete your account setup" at signup.aws.amazon.com/billing/signup/incomplete. The notice lists incomplete registration or Free plan restrictions as possible causes; the exact account-specific cause is unverified.
 - Following "Complete your AWS registration" returned "too many requests" and requested trying again after several minutes. No form was submitted and no plan was upgraded.
+- A read-only retry during the code review fixes on 2026-10-10 still redirected Amplify to the account setup notice. The registration form was not resubmitted. Code changes cannot resolve this account-specific access block.
 
 ## Acceptance checklist
 - [x] Prepare Gen 2 fullstack build specification
+- [x] Pin Node/npm and verify a clean-clone dependency installation locally
 - [ ] Deploy actual backend/frontend and record resources and public URL
 
 ## Decisions and assumptions
