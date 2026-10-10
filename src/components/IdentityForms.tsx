@@ -107,6 +107,22 @@ export default function IdentityForms({
   function message(failure: unknown, fallback: string) {
     return failure instanceof Error ? failure.message : fallback;
   }
+  function verificationNotice(destination?: string) {
+    return `A verification code was requested for ${destination || "your campus email"}. Check your inbox and spam/junk folder.`;
+  }
+  async function requestVerificationCode(address: string) {
+    try {
+      const delivery = await resendSignUpCode({ username: address });
+      setNotice(verificationNotice(delivery.destination));
+    } catch (failure) {
+      setError(
+        message(
+          failure,
+          "Code could not be sent. Use Resend code to try again.",
+        ),
+      );
+    }
+  }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
@@ -138,7 +154,7 @@ export default function IdentityForms({
           setAuthenticated(true);
         } else if (result.nextStep.signInStep === "CONFIRM_SIGN_UP") {
           changeStep("confirm");
-          setNotice("Verify your campus email using its signup code.");
+          await requestVerificationCode(address);
         } else
           throw new Error(
             "Additional sign-in verification is required. Contact the organiser for this account configuration.",
@@ -150,7 +166,7 @@ export default function IdentityForms({
           options: { userAttributes: { email: address } },
         });
         changeStep("confirm");
-        setNotice("Enter the verification code sent to your campus email.");
+        setNotice(verificationNotice());
       } else if (step === "confirm") {
         await confirmSignUp({
           username: address,
@@ -215,10 +231,7 @@ export default function IdentityForms({
     setError("");
     setNotice("");
     try {
-      await resendSignUpCode({ username: email.trim() });
-      setNotice("A new verification code has been sent.");
-    } catch (failure) {
-      setError(message(failure, "Code could not be sent. Try again."));
+      await requestVerificationCode(email.trim());
     } finally {
       setBusy(false);
     }

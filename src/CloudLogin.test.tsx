@@ -139,12 +139,54 @@ describe("Lightweight Cognito forms (mocked SDK)", () => {
     enter("Password", "SyntheticPassword1!");
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
     await screen.findByRole("heading", { name: "Verify your campus email" });
+    await screen.findByText(/A verification code was requested/);
+    expect(auth.resendSignUpCode).toHaveBeenCalledExactlyOnceWith({
+      username: "student@iiitm.ac.in",
+    });
     expect(screen.queryByText("Private workflow fixture")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Verify email" }));
     expect(auth.confirmSignUp).not.toHaveBeenCalled();
     expect(
       screen.getByText("Enter the verification code from your email."),
     ).toBeTruthy();
+  });
+  it("keeps an unconfirmed account on verification when automatic email sending fails and allows resend", async () => {
+    auth.signIn.mockResolvedValueOnce({
+      isSignedIn: false,
+      nextStep: { signInStep: "CONFIRM_SIGN_UP" },
+    });
+    auth.resendSignUpCode.mockRejectedValueOnce(
+      new Error("Email delivery limit exceeded. Please try again later."),
+    );
+    await open();
+    enter("Campus email", "student@iiitm.ac.in");
+    enter("Password", "SyntheticPassword1!");
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    await screen.findByRole("heading", { name: "Verify your campus email" });
+    expect((await screen.findByRole("alert")).textContent).toContain(
+      "Email delivery limit exceeded",
+    );
+    expect(screen.queryByText(/A verification code was requested/)).toBeNull();
+    expect(screen.queryByText("Private workflow fixture")).toBeNull();
+    await waitFor(() =>
+      expect(
+        (
+          screen.getByRole("button", {
+            name: "Resend code",
+          }) as HTMLButtonElement
+        ).disabled,
+      ).toBe(false),
+    );
+    auth.resendSignUpCode.mockResolvedValueOnce({
+      destination: "s***@iiitm.ac.in",
+      deliveryMedium: "EMAIL",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Resend code" }));
+    await screen.findByText(
+      /A verification code was requested for s\*\*\*@iiitm.ac.in/,
+    );
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(auth.resendSignUpCode).toHaveBeenCalledTimes(2);
   });
   it("keeps extra Cognito verification requirements visible without granting access", async () => {
     auth.signIn.mockResolvedValueOnce({
@@ -182,7 +224,7 @@ describe("Lightweight Cognito forms (mocked SDK)", () => {
       ).toBe(false),
     );
     fireEvent.click(screen.getByRole("button", { name: "Resend code" }));
-    await screen.findByText("A new verification code has been sent.");
+    await screen.findByText(/A verification code was requested/);
     expect(screen.queryByRole("alert")).toBeNull();
   });
   it("does not claim sign-out succeeded when Cognito rejects it", async () => {
@@ -225,7 +267,7 @@ describe("Lightweight Cognito forms (mocked SDK)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
     await screen.findByRole("heading", { name: "Verify your campus email" });
     fireEvent.click(screen.getByRole("button", { name: "Resend code" }));
-    await screen.findByText("A new verification code has been sent.");
+    await screen.findByText(/A verification code was requested/);
     enter("Verification code", "123456");
     fireEvent.click(screen.getByRole("button", { name: "Verify email" }));
     await screen.findByRole("heading", { name: "Sign in to your campus" });
