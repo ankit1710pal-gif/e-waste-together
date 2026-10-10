@@ -14,3 +14,5 @@ private-pilot-records/
 .aws/
 *.pem
 *.key
+e-waste-together-source-*.zip
+e-waste-together-demo-build-*.zip

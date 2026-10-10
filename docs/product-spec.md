@@ -62,3 +62,11 @@ Contact preference is visible only to the resident and organiser. No public data
 3. Pilot-approved export/retention implementation.
 4. Multi-drive data architecture if the pilot exceeds 100 requests.
 5. Notifications or dedicated partner portal only if field feedback supports them.
+
+## Review hardening (2026-10-10)
+
+Confirmation rechecks that a non-empty assigned batch still exists, even if residents withdrew after Awaiting confirmation. All command timestamps require explicit offsets; the UI supplies IST for evidence as well as collection and handover. Confirmation/proposal cannot schedule a past collection. Real confirmation, handover and evidence timestamps cannot be future outcomes; demo simulations may be future but must preserve event ordering. Recycling can only credit weight already handed over by the evidence timestamp.
+
+The API authorises upload issuance and attachment linking independently. Closed/rejected/withdrawn/completed request photos are immutable, existing photos and receipts cannot be replaced, and saved document reads remain authorised after closure. S3 POSTs write pending/; the backend verifies metadata and copies to private/ before committing the reference. Seven-day pending/ expiry cannot delete linked private/ documents. A database write failure after copying can leave a private orphan requiring administrator reconciliation.
+
+Processed action IDs hold fixed-size SHA-256 command digests. Legacy demo payloads remain replay-compatible and migrate to digests on the next write. The deployment remains one drive and one DynamoDB item; closing it does not expose a new-drive button or erase previous pilot history.
