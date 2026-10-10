@@ -17,6 +17,7 @@ import {
 import {
   ArrowDownToLine,
   ArrowRight,
+  Check,
   ChevronRight,
   ClipboardList,
   Clock3,
