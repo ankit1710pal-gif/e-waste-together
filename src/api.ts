@@ -9,8 +9,10 @@ import {
 } from "../shared/domain";
 import { seed } from "../shared/seed";
 import type { Schema } from "../amplify/data/resource";
-import { generateClient } from "aws-amplify/data";
+import type { generateClient } from "aws-amplify/data";
 export const isAws = import.meta.env.VITE_DATA_MODE === "aws";
+type DataMode = "aws" | "demo";
+const defaultMode: DataMode = isAws ? "aws" : "demo";
 const storageKey = "e-waste-together:demo:v1";
 let client: ReturnType<typeof generateClient<Schema>>;
 export async function configureCloud() {
@@ -24,16 +26,27 @@ export async function configureCloud() {
     );
   const { Amplify } = await import("aws-amplify");
   Amplify.configure(outputs["../amplify_outputs.json"]);
+  const { generateClient } = await import("aws-amplify/data");
   client = generateClient<Schema>({ authMode: "userPool" });
 }
-export async function cloudActor(): Promise<Actor> {
+export class AdmissionPendingError extends Error {
+  constructor(public readonly email: string) {
+    super(
+      "An organiser needs to admit your account before you can access the drive.",
+    );
+    this.name = "AdmissionPendingError";
+  }
+}
+export async function cloudActor(forceRefresh = false): Promise<Actor> {
   const { fetchAuthSession } = await import("aws-amplify/auth");
-  const claims = (await fetchAuthSession()).tokens?.idToken?.payload;
+  const claims = (
+    await fetchAuthSession(forceRefresh ? { forceRefresh: true } : undefined)
+  ).tokens?.idToken?.payload;
   if (!claims?.sub) throw new Error("Sign in to continue.");
   const groups = claims["cognito:groups"] as string[] | undefined;
   if (!groups?.some((g) => ["IIITM_MEMBERS", "IIITM_ORGANISERS"].includes(g)))
-    throw new Error(
-      "Your account is awaiting campus admission. Ask the organiser to add you to IIITM_MEMBERS, then sign out and sign in again.",
+    throw new AdmissionPendingError(
+      typeof claims.email === "string" ? claims.email : "",
     );
   return {
     id: claims.sub,
@@ -73,8 +86,11 @@ function unpack(
   return result;
 }
 class KnownActionError extends Error {}
-export async function loadView(actor: Actor): Promise<View> {
-  if (!isAws) return viewFor(localState(), actor);
+export async function loadView(
+  actor: Actor,
+  mode: DataMode = defaultMode,
+): Promise<View> {
+  if (mode === "demo") return viewFor(localState(), actor);
   const { data, errors } = await client.queries.dashboard();
   return unpack(data, errors).view;
 }
@@ -83,8 +99,9 @@ export async function execute(
   actor: Actor,
   command: Command,
   revision: number,
+  mode: DataMode = defaultMode,
 ): Promise<View> {
-  const fingerprint = `${actor.id}:${JSON.stringify(command)}`;
+  const fingerprint = `${mode}:${actor.id}:${JSON.stringify(command)}`;
   const attempt = pending.get(fingerprint) ?? {
     id: crypto.randomUUID(),
     revision,
@@ -92,7 +109,7 @@ export async function execute(
   pending.set(fingerprint, attempt);
   try {
     let view: View;
-    if (!isAws) {
+    if (mode === "demo") {
       const next = applyCommand(
         localState(),
         actor,
@@ -113,7 +130,7 @@ export async function execute(
     pending.delete(fingerprint);
     return view;
   } catch (error) {
-    if (!isAws || error instanceof KnownActionError)
+    if (mode === "demo" || error instanceof KnownActionError)
       pending.delete(fingerprint);
     // Preserve action ID on uncertain network failures so retry does not double-count.
     throw error;
@@ -124,7 +141,8 @@ export function resetDemo() {
   Object.keys(localStorage)
     .filter((key) => key.startsWith("demo-file:"))
     .forEach((key) => localStorage.removeItem(key));
-  pending.clear();
+  for (const key of pending.keys())
+    if (key.startsWith("demo:")) pending.delete(key);
 }
 async function fileCall(payload: object) {
   const { data, errors } = await client.mutations.fileAccess({
@@ -136,6 +154,7 @@ export async function uploadFile(
   target: "photo" | "receipt" | "evidence",
   recordId: string,
   file: File,
+  mode: DataMode = defaultMode,
 ): Promise<Attachment> {
   if (
     file.size <= 0 ||
@@ -146,7 +165,7 @@ export async function uploadFile(
     throw new Error(
       "Choose a JPEG or PNG photo, or a PDF receipt, up to 5 MB.",
     );
-  if (!isAws) {
+  if (mode === "demo") {
     if (file.size > 500 * 1024)
       throw new Error(
         "The local demo stores files in this browser. Choose a file smaller than 500 KB; AWS supports up to 5 MB.",
@@ -185,8 +204,9 @@ export async function fileUrl(
   recordId: string,
   file: Attachment,
   evidenceId?: string,
+  mode: DataMode = defaultMode,
 ): Promise<string> {
-  if (!isAws) {
+  if (mode === "demo") {
     const content = localStorage.getItem(`demo-file:${file.key}`);
     if (!content)
       throw new Error("This sample file is not stored in this browser.");

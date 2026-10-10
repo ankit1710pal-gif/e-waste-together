@@ -1940,3 +1940,143 @@ input[type="checkbox"] {
     flex-wrap: wrap;
   }
 }
+
+/* Welcome and identity use the same light/dark control tokens. */
+.identity-page {
+  min-height: 100dvh;
+  max-width: none;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6) var(--space-5);
+}
+.identity-page .login-card {
+  width: min(100%, 480px);
+}
+.welcome-card {
+  width: min(100%, 720px);
+  padding: var(--space-7);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+.entry-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-6);
+}
+.welcome-promise {
+  color: var(--muted);
+  font-size: var(--text-lg);
+}
+.welcome-steps {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-6) 0;
+  display: grid;
+  gap: var(--space-5);
+}
+.welcome-steps li {
+  display: flex;
+  gap: var(--space-4);
+}
+.welcome-steps svg {
+  color: var(--primary);
+  margin-top: var(--space-1);
+}
+.welcome-steps h2 {
+  font-size: var(--text-base);
+  margin-bottom: var(--space-1);
+}
+.welcome-steps p {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin: 0;
+}
+.entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: var(--space-5) 0;
+}
+.entry-actions > button {
+  flex: 1 1 120px;
+}
+.demo-role-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-5) 0;
+}
+.demo-role-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  text-align: left;
+  padding: var(--space-5);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+}
+.demo-role-card:hover {
+  background: var(--success-surface);
+}
+.demo-role-card strong {
+  font-size: var(--text-lg);
+}
+.demo-role-card span {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.demo-role-card svg {
+  margin-top: auto;
+  color: var(--primary);
+}
+.mode-banner:not(.cloud) {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  flex-wrap: wrap;
+}
+.mode-banner > span {
+  flex: 1 1 16rem;
+}
+.demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.field > label {
+  color: var(--text);
+  font-weight: 600;
+}
+.password-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+}
+.field .field-error {
+  color: var(--danger);
+}
+.signed-in-email {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-subtle);
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .identity-page {
+    padding: var(--space-5) var(--space-4);
+  }
+  .welcome-card,
+  .identity-page .login-card {
+    padding: var(--space-5);
+  }
+  .demo-role-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

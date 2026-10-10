@@ -42,18 +42,22 @@ import {
   type View,
 } from "../shared/domain";
 import { demoActors } from "../shared/seed";
-import {
-  execute,
-  fileUrl,
-  isAws,
-  loadView,
-  resetDemo,
-  uploadFile,
-} from "./api";
+import { execute, fileUrl, loadView, resetDemo, uploadFile } from "./api";
 type Page = "Overview" | "My requests" | "Manage drive" | "Collection guide";
 
-export default function App({ cloudIdentity }: { cloudIdentity?: Actor }) {
-  const [persona, setPersona] = useState<keyof typeof demoActors>("resident");
+export default function App({
+  cloudIdentity,
+  initialDemoPersona = "resident",
+  onExitDemo,
+}: {
+  cloudIdentity?: Actor;
+  initialDemoPersona?: keyof typeof demoActors;
+  onExitDemo?: () => void;
+}) {
+  const isAws = Boolean(cloudIdentity);
+  const mode = isAws ? "aws" : "demo";
+  const [persona, setPersona] =
+    useState<keyof typeof demoActors>(initialDemoPersona);
   const actor = cloudIdentity ?? demoActors[persona];
   const organiser = actor.role === "organiser";
   const [view, setView] = useState<View>();
@@ -80,7 +84,7 @@ export default function App({ cloudIdentity }: { cloudIdentity?: Actor }) {
   async function refresh() {
     setError("");
     try {
-      setView(await loadView(actor));
+      setView(await loadView(actor, mode));
     } catch (e) {
       setError((e as Error).message);
     }
@@ -88,7 +92,7 @@ export default function App({ cloudIdentity }: { cloudIdentity?: Actor }) {
   useEffect(() => {
     let active = true;
     setView(undefined);
-    loadView(actor)
+    loadView(actor, mode)
       .then((v) => {
         if (active) setView(v);
       })
@@ -108,7 +112,7 @@ export default function App({ cloudIdentity }: { cloudIdentity?: Actor }) {
     setError("");
     setNotice("");
     try {
-      const next = await execute(actor, command, view.revision);
+      const next = await execute(actor, command, view.revision, mode);
       setView(next);
       setNotice(message);
       return next;
@@ -127,11 +131,12 @@ export default function App({ cloudIdentity }: { cloudIdentity?: Actor }) {
     setBusy(true);
     setError("");
     try {
-      const attachment = await uploadFile(target, recordId, file);
+      const attachment = await uploadFile(target, recordId, file, mode);
       const next = await execute(
         actor,
         { type: "attach", target, recordId, attachment },
         view.revision,
+        mode,
       );
       setView(next);
       setNotice(
@@ -151,7 +156,7 @@ export default function App({ cloudIdentity }: { cloudIdentity?: Actor }) {
   ) {
     try {
       setPreview({
-        url: await fileUrl(target, recordId, file, evidenceId),
+        url: await fileUrl(target, recordId, file, evidenceId, mode),
         name: file.name,
       });
     } catch (e) {
@@ -261,7 +266,7 @@ export default function App({ cloudIdentity }: { cloudIdentity?: Actor }) {
       const document =
         stagedEvidence.current?.fingerprint === fingerprint
           ? stagedEvidence.current.document
-          : await uploadFile("evidence", "drive", file);
+          : await uploadFile("evidence", "drive", file, mode);
       stagedEvidence.current = { fingerprint, document };
       const next = await execute(
         actor,
@@ -273,6 +278,7 @@ export default function App({ cloudIdentity }: { cloudIdentity?: Actor }) {
           document,
         },
         view.revision,
+        mode,
       );
       stagedEvidence.current = undefined;
       setView(next);
@@ -428,10 +434,13 @@ export default function App({ cloudIdentity }: { cloudIdentity?: Actor }) {
               <Sparkles size={15} />
               {isAws
                 ? "AWS connected mode · campus access required"
-                : "Demo workspace · all people, partner details and results are simulated"}
+                : "Demo — simulated people and data, not real sign-in"}
             </span>
             {!isAws && (
-              <button onClick={() => setModal("reset")}>Reset demo</button>
+              <div className="demo-actions">
+                <button onClick={() => setModal("reset")}>Reset demo</button>
+                {onExitDemo && <button onClick={onExitDemo}>Exit demo</button>}
+              </div>
             )}
           </div>
           {notice && (

@@ -5,7 +5,19 @@ test("submit → review → batch → confirmation → partial handover preserve
 }) => {
   // Fresh browser context; all dates are explicitly fictional and future relative
   // to the test clock. No AWS account, private data or live collection is used.
+  const enterDemo = async () => {
+    await page
+      .getByRole("button", { name: "Try the demo", exact: true })
+      .click();
+    await page.getByRole("button", { name: /^Asha/ }).click();
+    await expect(
+      page.getByText("Demo — simulated people and data, not real sign-in", {
+        exact: true,
+      }),
+    ).toBeVisible();
+  };
   await page.goto("/");
+  await enterDemo();
   await expect(
     page.getByRole("heading", { name: "Give your electronics a next step." }),
   ).toBeVisible();
@@ -23,6 +35,7 @@ test("submit → review → batch → confirmation → partial handover preserve
     .fill("UI workflow regression fixture");
   await submit.getByRole("button", { name: "Submit for review" }).click();
   await page.reload();
+  await enterDemo();
   await page
     .getByRole("combobox", { name: "Demo role" })
     .selectOption("organiser");
@@ -90,6 +103,7 @@ test("submit → review → batch → confirmation → partial handover preserve
   await expect(measured).toContainText("0.2 kg");
   await expect(recycled).toContainText("0 kg");
   await page.reload();
+  await enterDemo();
   await expect(measured).toContainText("0.2 kg");
   await expect(recycled).toContainText("0 kg");
 });

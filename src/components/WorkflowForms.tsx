@@ -5,7 +5,6 @@ import {
   type Metrics,
   type RequestRecord,
 } from "../../shared/domain";
-import { isAws } from "../api";
 import { Field } from "./ui";
 export function RequestForm({
   busy,
@@ -259,9 +258,9 @@ export function EvidenceForm({
       <Field
         label="Downstream evidence document"
         hint={
-          isAws
-            ? "JPEG, PNG or PDF · up to 5 MB"
-            : "Sample JPEG, PNG or PDF · up to 500 KB in local demo"
+          demo
+            ? "Sample JPEG, PNG or PDF · up to 500 KB in local demo"
+            : "JPEG, PNG or PDF · up to 5 MB"
         }
       >
         <input
