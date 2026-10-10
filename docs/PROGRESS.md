@@ -8,9 +8,11 @@ The starting folder contained PROJECT_PLAN.md only. The user subsequently initia
 
 Community: IIITM Gwalior. Interviews and collection partner are synthetic for the demonstration. No real collection or recycling has occurred.
 
-The local implementation and review fixes now exist. **87 unit/component tests pass**, and a Playwright regression covers submission, refresh persistence, organiser review, batching, simulated confirmation and partial handover. Measured handover is 0.2 kg while evidenced recycling remains 0 kg. No actual pickup occurred. Current clean-clone installation, build and backend check results are recorded in docs/verification.md; older manual browser checks remain historical evidence.
+The local implementation and review fixes now exist. **97 unit/component tests pass**, and a Playwright regression covers submission, refresh persistence, organiser review, batching, simulated confirmation and partial handover. Measured handover is 0.2 kg while evidenced recycling remains 0 kg. No actual pickup occurred. Clean-clone installation and current build/backend check results are recorded in docs/verification.md; older manual browser checks remain historical evidence.
 
 Review fixes include strict date ordering, nonempty confirmation batches, immutable attachments with temporary-upload expiry, compact action digests, campus email signup, modular UI and lighter login forms. The one-community/one-drive/single-item architecture and retained DynamoDB teardown behavior are explicitly documented. See docs/review-resolution.md for all review items.
+
+Follow-up hardening adds atomic upload-link quotas (10/account/fixed 15-minute window; 200/community/UTC day), TTL cleanup of separate quota rows, real-mode collection-time warnings and hosted race/replay/lifecycle checks. Local tests cover conditional-write loss and a response lost after an attachment was committed; private-orphan reconciliation remains an administrator operation, not automatic deletion. Current check results are in docs/verification.md.
 
 | Record | Actual status |
 |---|---|

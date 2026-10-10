@@ -14,6 +14,7 @@ import {
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
+import { reserveUploadSlot } from "./upload-quota";
 import {
   applyCommand,
   attachmentTarget,
@@ -127,6 +128,10 @@ export const handler = async (
           (payload.target === "photo" && type === "application/pdf")
         )
           throw new DomainError("Choose a JPEG, PNG or PDF file.");
+        const name = textField(payload.name, "File name", 120);
+        // Authorise and validate before consuming quota; reserve before signing.
+        // A signing failure consumes its slot conservatively (no unsafe refund).
+        await reserveUploadSlot(db, actor.id);
         const key = `private/${payload.target}/${payload.recordId}/${randomUUID()}`;
         const post = await createPresignedPost(s3, {
           Bucket: process.env.FILES_BUCKET!,
@@ -144,7 +149,7 @@ export const handler = async (
           attachment: {
             key,
             type,
-            name: textField(payload.name, "File name", 120),
+            name,
           },
         });
       }

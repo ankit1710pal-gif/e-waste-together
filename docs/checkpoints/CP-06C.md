@@ -23,7 +23,7 @@ Status: Not started
 - Owner: user for account/repository and external validation; developer for implementation/verification.
 
 ## Resume instructions
-- Verify two residents, unadmitted user, organiser, private files, duplicates, partial handover, cancellation and metrics after CP-06B.
+- Verify two residents, unadmitted user, organiser, private files, duplicates, partial handover, cancellation and metrics after CP-06B. Also execute upload-quota concurrency/rollover, copy/write race, lost-response replay, lifecycle/TTL and real collection-time checks in docs/deployment.md.
 - Local commands: npm run dev; npm run test; npm run build; npm run check:backend.
-- Actual commit ID: unavailable; no Git repository or commit has been created.
+- Source is published on GitHub; deployed commit/URL and all live check results remain unavailable. Record the actual deployed commit after CP-06B.
 

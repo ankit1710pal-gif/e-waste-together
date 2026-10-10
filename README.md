@@ -47,7 +47,11 @@ All requests, handovers, evidence, audit entries and action digests share one Dy
 
 All workflow timestamps require explicit time zones. The UI records IST for confirmation, collection, handover and evidence. Real outcome timestamps cannot be in the future; visibly labelled demo mode permits fictional future handovers. A collection cannot be confirmed in the past, and outcomes must follow the confirmation/collection and handovers they support.
 
+In AWS mode, organisers can record handovers only once the confirmed collection time has arrived. The confirmation form and confirmed drive show this warning. Use demo mode for an early simulated walkthrough; do not invent an earlier real collection time to make a test pass.
+
 Photos and receipts cannot be replaced through the API. Photos cannot be added to closed requests or drives. Uploads go to temporary `pending/` S3 keys and are copied to private keys before their references are saved. A lifecycle rule expires temporary uploads after seven days and aborts incomplete multipart uploads after one day; it does not expire linked documents. A failed/uncertain database write after promotion can leave a private orphan, which needs administrator reconciliation against saved references.
+
+Upload-link issuance is limited server-side to **10 valid requests per account per fixed 15-minute window** and **200 per community per UTC day**, including organisers. A DynamoDB transaction reserves both quotas before signing; unavailable quota storage denies issuance. Signing failures may consume a slot. Small quota counter items share the state table but do not rewrite the workflow item or consume workflow action IDs. Only quota rows carry `expiresAt` for TTL cleanup; new windows use different keys, so resetting a quota does not depend on immediate TTL deletion. These are issuance limits, not single-use S3 links, a general API traffic limit or a hard AWS spending cap.
 
 The DynamoDB table has **RETAIN** removal policy and point-in-time recovery. Deleting a sandbox does **not** delete that table; retained tables/backups can continue consuming credits. Follow the [teardown and cost tracking instructions](docs/deployment.md#spending-and-teardown).
 

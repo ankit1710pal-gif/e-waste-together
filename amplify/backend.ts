@@ -19,6 +19,8 @@ const table = new Table(Stack.of(lambda), "CampusPilotState", {
   encryption: TableEncryption.AWS_MANAGED,
   pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
   removalPolicy: RemovalPolicy.RETAIN,
+  // Only upload quota rows have this field; the workflow item never expires.
+  timeToLiveAttribute: "expiresAt",
 });
 table.grantReadWriteData(lambda);
 backend.storage.resources.bucket.grantReadWrite(lambda);

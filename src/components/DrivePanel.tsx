@@ -71,6 +71,12 @@ export function DrivePanel({
             <p>
               <strong>Accepted:</strong> {confirmed.accepted.join(", ")}
             </p>
+            {!view.demo && (
+              <p className="quiet">
+                Record handovers at or after {displayDate(confirmed.date)}, once
+                that time has arrived. Use demo mode for earlier simulations.
+              </p>
+            )}
           </div>
         )}
         <div className="drive-actions">

@@ -2,6 +2,17 @@
 
 Date: 2026-10-10 (Asia/Kolkata)
 
+## Follow-up risk checks
+
+After adding upload quotas and real-mode timing warnings, using Node 22.23.3/npm 10.9.0:
+
+- `npm run test`: **97 passed**, four files: 57 domain, 27 mocked Lambda, eight pre-sign-up and five login component cases.
+- Frontend TypeScript and Vite production build: **passed**, 2,435 modules; main JavaScript 282.08 kB (89.06 kB gzip), login 115.50 kB (32.46 kB gzip), stylesheet 20.16 kB (5.37 kB gzip).
+- `npm run check:backend`: **passed**.
+- Playwright Chromium rerun: **one passed**, 52.9 seconds for the complete workflow, approximately 1.1 minutes total including server/browser startup.
+
+Ten new mocked Lambda cases cover simultaneous account quotas, cross-request quotas, window rollover without TTL deletion, community/day limits across accounts, invalid filenames, unavailable quota storage, signing failures, unaffected reads, copy-before-conditional-write loss and replay after a committed write's response is lost. These model database/S3 behavior; actual transactions, TTL deletion, copying and hosted limits still need the live checklist in deployment.md. No new dependencies or lockfile changes were required.
+
 ## Completed checks
 
 The review implementation is `9f30dab`, corrected by `93f4fc7`. Verification uses an isolated **Node 22.23.3/npm 10.9.0** runtime, matching the deployment pins.

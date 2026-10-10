@@ -101,6 +101,12 @@ export function ConfirmationForm({
           ? "This records a simulated partner confirmation for the demo only."
           : "Enter the partner’s actual confirmation. Do not infer approval from an unanswered message."}
       </p>
+      {!demo && (
+        <p className="form-intro">
+          Handovers can be recorded only after the confirmed collection time has
+          arrived. Use demo mode for a simulated walkthrough before that time.
+        </p>
+      )}
       <Field label="Collection partner">
         <input
           name="partner"

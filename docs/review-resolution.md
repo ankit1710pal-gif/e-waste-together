@@ -19,4 +19,11 @@ Implementation commit: `9f30dab`. Later build-phase and verification updates are
 
 ## Remaining acceptance
 
+Follow-up risks are addressed as follows:
+
+- **Upload-link spam:** server-side atomic quota reservations now enforce 10/account/fixed 15-minute window and 200/community/UTC day. TTL counter rows are independent of the workflow revision. Failed quota storage denies signing; signing failures consume capacity conservatively. Already issued POST replay and general API traffic are not rate-limited by this mechanism.
+- **Private orphans:** the copy-before-write tradeoff remains. Regression cases cover conditional-write loss and response loss after a commit, preserving valid data rather than deleting uncertain copies. The runbook adds exact hosted race/replay/reconciliation steps.
+- **Real collection time:** both the real-mode confirmation form and confirmed drive explain that handovers must wait until the collection time. Demo mode remains the route for an earlier fictional walkthrough.
+- **Live AWS:** the hosted checklist explicitly includes Cognito, signed uploads, copy/write failure paths, lifecycle/TTL, quota concurrency and the full Amplify build. These checks remain pending; local mocks do not establish cloud behavior.
+
 The code review fixes do not establish a cloud deployment, account activation, real campus admission, physical collection or recycling. Complete the hosted checklist in [deployment.md](deployment.md) once account access works. Production dependency audit is clean at the time of verification; development/Amplify tooling still has upstream advisories, as recorded in verification.md.

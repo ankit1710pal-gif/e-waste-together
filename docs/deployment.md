@@ -68,23 +68,42 @@ Use a development branch for synthetic test accounts/records. Keep its results o
 
 ## Hosted acceptance checklist — all unverified
 
+For real-mode QA, use an isolated development branch with explicitly synthetic records. Schedule the test collection a few minutes ahead, wait for that time to arrive, then exercise handover using a timestamp between collection time and the current time. Future handovers are rejected. Use local demo mode for a walkthrough that cannot wait; do not backdate real pilot records or report QA fixtures as physical results.
+
 - [ ] Backend and frontend deployed; actual commit and URL recorded.
+- [ ] Amplify build logs confirm Node 22.23.3/npm 10.9.0, successful npm ci, backend deployment and generated client outputs.
 - [ ] New unadmitted signup denied dashboard/actions/storage.
 - [ ] Non-campus signup rejected; valid campus email verified before manual admission.
 - [ ] Two admitted residents see only their own private requests/photos.
 - [ ] Resident cannot invoke review, confirmation, handover, cancellation or evidence directly through API.
 - [ ] Unrelated Cognito groups cannot access campus records.
 - [ ] Organiser can complete review → assignment → confirmation → partial handover.
+- [ ] Real-mode forms warn that handover must wait for the confirmed collection time; earlier and future handovers are rejected. Use demo mode for an early simulation.
 - [ ] Browser reload and a separate authenticated session verify persistence.
 - [ ] Repeated action IDs do not duplicate handovers; competing revisions conflict safely.
 - [ ] S3 objects remain private; another resident cannot fetch photos/receipts; signed URLs expire.
 - [ ] Valid uploads succeed with actual S3 CORS; unsupported/oversized uploads fail.
+- [ ] Simultaneous upload-link requests enforce 10/account/fixed 15-minute window and 200/community/UTC day. No signed link is returned when a quota reservation fails; authorised reads remain available.
+- [ ] DynamoDB quota updates are atomic across both counters. TTL is enabled for expiresAt, workflow records have no expiry, and new windows work while old quota rows still exist.
 - [ ] Signed uploads write pending/ only; saved references read private/ copies. Photos/receipts cannot be replaced and closed photo uploads are denied.
 - [ ] S3 lifecycle configuration expires pending/ objects after seven days and aborts incomplete multipart uploads after one day without expiring private/ documents.
+- [ ] Copy followed by a conditional-write loss preserves saved references and may leave a private orphan; replay after an uncertain successful write returns the saved attachment without recopying/deleting it. Follow the procedure below.
 - [ ] Estimates and measured/evidenced totals match known branch test records.
 - [ ] Withdrawal, no-show, cancellation and closure preserve truthful totals.
 - [ ] Phone layout and keyboard/modal focus usable on hosted site.
 - [ ] CloudWatch logs show error type only; no contact data or payloads.
+
+## Attachment race and lifecycle checks
+
+Run these on an isolated development branch with synthetic records and an approved test budget after account access works. Mocked local tests exercise failure paths; they cannot prove AWS IAM, S3 or DynamoDB behavior.
+
+1. Upload two different sample photos for the same eligible request, creating separate pending/private destination keys. Send both attach actions with the same known revision and different action IDs. Repeat with a fresh test request if the timing does not produce a copy followed by a conditional-write loss.
+2. Read the current state with a fresh authenticated request and inspect the branch's S3 objects through the trusted administrator. Confirm the winning reference is private, readable and unchanged. If the losing copy exists, record its key as a possible orphan; it must not replace the saved reference. A failure before copying leaves only a temporary object instead.
+3. For a response lost after a successful commit, replay the exact original action ID/payload/revision. Confirm the saved attachment is returned, the action is not duplicated and the private object remains readable. Do not assume a network error means the write failed.
+4. Reconcile possible orphans against every saved photo, receipt and evidence document after in-flight actions have settled. Preserve uncertain/live references. Administrator-approved cleanup is separate from these checks; do not delete the entire private/ prefix.
+5. Inspect the deployed lifecycle rules and TTL configuration. Record configuration verification separately from observed cleanup. After the relevant expiry periods, check abandoned pending/ objects and old quota rows are removed while linked private/ documents and the workflow item remain. Cleanup is asynchronous; passing an expiry time alone is not proof of deletion.
+
+Quota reservations count valid authorised upload-link requests, including signing failures. Fixed windows can permit a burst across a boundary; the shared daily limit bounds newly issued object keys. Issued POSTs remain reusable until their 120-second expiry. Rejected API calls and repeated POSTs can still incur requests/costs, so this does not replace budgets or broader traffic controls. Changes to the limits require a reviewed server-side change. DynamoDB transaction/TTL behavior is described in the [AWS transaction documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/transaction-apis.html) and [TTL documentation](https://docs.aws.amazon.com/us_en/amazondynamodb/latest/developerguide/ttl-expired-items.html).
 
 ## Spending and teardown
 
