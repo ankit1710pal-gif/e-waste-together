@@ -43,8 +43,8 @@ Create a local `.env.local` with `VITE_DATA_MODE=aws` and restart Vite to use re
 
 ## GitHub and Hosting
 
-1. Obtain the actual repository URL and publication authorisation. This directory currently has no Git repository or remote.
-2. Inspect source and ignored files for secrets/real records. Initialise Git if desired, configure the author's identity, commit source and lockfile, and push the intended branch. Preserve any subsequently created history/remotes.
+1. Use the verified repository [ankit1710pal-gif/e-waste-together](https://github.com/ankit1710pal-gif/e-waste-together), branch `main`. Source and lockfile were already published by the user; local and remote initial commit matched on 2026-10-10.
+2. Inspect new changes for secrets/real records, commit and push the intended branch while preserving existing history. Generated outputs, local environment files and AWS credentials are ignored.
 3. In AWS Amplify, create an app connected to this repository and branch.
 4. Select the approved backend deployment service role and verify region/build-image Node compatibility (Node 22.12+ or 24).
 5. Use the included `amplify.yml`: `npm ci` → `ampx pipeline-deploy` → tests and backend TypeScript check → Vite build with AWS mode. Output directory is `dist`. Do not use a frontend-only drag/drop deployment.
