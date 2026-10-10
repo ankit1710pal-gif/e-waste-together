@@ -1,4 +1,4 @@
-import { Badge, Modal, Stat, Empty, Guide } from "./components/ui";
+import { Badge, Modal, Stat, Empty, Guide, Skeleton } from "./components/ui";
 import { number, displayDate, istTimestamp } from "./components/format";
 import { RequestCard } from "./components/RequestCard";
 import { DrivePanel } from "./components/DrivePanel";
@@ -8,12 +8,7 @@ import {
   HandoverForm,
   EvidenceForm,
 } from "./components/WorkflowForms";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type FormEvent,
-} from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   ArrowDownToLine,
   ArrowRight,
@@ -493,6 +488,7 @@ export default function App({ cloudIdentity }: { cloudIdentity?: Actor }) {
               {error
                 ? "The drive could not be loaded. Check the message above."
                 : "Loading your community…"}
+              {!error && <Skeleton />}
             </div>
           ) : (
             <>

@@ -1,5 +1,14 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { ClipboardList, X } from "lucide-react";
+export function Skeleton() {
+  return (
+    <div className="skeleton-stack" aria-hidden="true">
+      <div className="skeleton" />
+      <div className="skeleton" />
+      <div className="skeleton" />
+    </div>
+  );
+}
 export function Badge({ children }: { children: ReactNode }) {
   return (
     <span
